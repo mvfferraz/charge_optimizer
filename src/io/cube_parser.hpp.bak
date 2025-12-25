@@ -1,0 +1,91 @@
+#pragma once
+
+#include "../core/esp_grid.hpp"
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
+#include <iostream>
+
+namespace chargeopt {
+
+class CubeParser {
+public:
+    static ESPGrid parse(const std::string& filename) {
+        std::ifstream file(filename);
+        if (!file.is_open()) {
+            throw std::runtime_error("Cannot open CUBE file: " + filename);
+        }
+        
+        ESPGrid grid;
+        std::string line;
+        
+        // Skip two comment lines
+        std::getline(file, line);
+        std::getline(file, line);
+        
+        // Read number of atoms and origin
+        int num_atoms;
+        double origin_x, origin_y, origin_z;
+        std::getline(file, line);
+        std::istringstream iss1(line);
+        iss1 >> num_atoms >> origin_x >> origin_y >> origin_z;
+        
+        Eigen::Vector3d origin(origin_x, origin_y, origin_z);
+        
+        // Read grid dimensions and vectors
+        int nx, ny, nz;
+        Eigen::Vector3d vx, vy, vz;
+        
+        std::getline(file, line);
+        std::istringstream iss2(line);
+        iss2 >> nx >> vx(0) >> vx(1) >> vx(2);
+        
+        std::getline(file, line);
+        std::istringstream iss3(line);
+        iss3 >> ny >> vy(0) >> vy(1) >> vy(2);
+        
+        std::getline(file, line);
+        std::istringstream iss4(line);
+        iss4 >> nz >> vz(0) >> vz(1) >> vz(2);
+        
+        // Skip atom lines
+        for (int i = 0; i < std::abs(num_atoms); ++i) {
+            std::getline(file, line);
+        }
+        
+        // Read volumetric data
+        std::vector<double> values;
+        values.reserve(nx * ny * nz);
+        
+        double val;
+        while (file >> val) {
+            values.push_back(val);
+        }
+        
+        if (values.size() != static_cast<size_t>(nx * ny * nz)) {
+            std::cerr << "Warning: Expected " << (nx * ny * nz) << " values, got " << values.size() << std::endl;
+        }
+        
+        // Convert to grid points
+        size_t idx = 0;
+        for (int i = 0; i < nx && idx < values.size(); ++i) {
+            for (int j = 0; j < ny && idx < values.size(); ++j) {
+                for (int k = 0; k < nz && idx < values.size(); ++k) {
+                    Eigen::Vector3d pos = origin + i * vx + j * vy + k * vz;
+                    
+                    // Convert from Bohr to Angstrom if needed
+                    // Cube files are typically in Bohr (1 Bohr = 0.529177 Angstrom)
+                    pos *= 0.529177;
+                    
+                    grid.add_point(pos, values[idx]);
+                    idx++;
+                }
+            }
+        }
+        
+        return grid;
+    }
+};
+
+} // namespace chargeopt

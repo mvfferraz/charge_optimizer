@@ -1,0 +1,37 @@
+# Build directories
+build/
+cmake-build-*/
+
+# Compiled files
+*.o
+*.so
+*.dylib
+*.exe
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Output files
+charges.txt
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+*.cmake
+
+# Eigen (if downloaded)
+_deps/
+
+# Test outputs
+Testing/
