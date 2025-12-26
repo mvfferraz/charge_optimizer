@@ -2,6 +2,49 @@
 
  **C++ tool for fitting atomic partial charges to quantum mechanical electrostatic potentials using constrained quadratic optimization.**
 
+
+##  Known Limitations
+This implementation is a **proof-of-concept** with known issues:
+
+### Current Status
+-  Core QP solver works mathematically
+-  Constraint handling (charge conservation, symmetry) functional
+-  File I/O for XYZ and CUBE formats operational
+-  **Unit conversion Bohr↔Angstrom has edge cases**
+-  **Sign convention auto-detection unreliable**
+-  **Charge magnitudes ~20-80% of expected RESP values**
+
+### What Works
+- Qualitative charge distribution (correct relative signs within molecule for symmetric cases)
+- Symmetry detection
+- Basic ESP fitting
+
+### What Doesn't Work Reliably
+- Absolute charge magnitudes often too small
+- Water molecule shows inconsistent results
+- Some Psi4 ESP files cause sign inversion
+
+### Root Causes Identified
+1. Possible matrix conditioning issues in QP solver
+2. Unit conversion between atomic units (Bohr) and Angstrom may have bugs
+3. ESP grid filtering may be too aggressive, removing high-weight points
+
+### Recommended Usage
+- **For learning/demonstration only**
+- Not recommended for production MD simulations
+- Compare results with established tools (RESP, AM1-BCC)
+
+### Future Work Needed
+- [ ] Verify unit consistency throughout pipeline
+- [ ] Implement better conditioned QP formulation
+- [ ] Add extensive unit tests with known reference data
+- [ ] Validate against RESP implementation
+
+---
+
+**This project demonstrates C++ implementation of constrained QP for charge fitting, but requires further development for research-quality results.**
+
+
 ## What Does This Do?
 
 Given a molecule and its quantum mechanical electrostatic potential (ESP), this tool finds the optimal atomic partial charges that:
