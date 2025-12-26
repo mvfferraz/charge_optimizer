@@ -23,7 +23,7 @@ void QPSolver::build_esp_matrices(const Molecule& mol,
             const auto& atom = mol.atom(j);
             double r = (grid_point.position - atom.position).norm();
             
-            // Coulomb potential: V = q/r (in atomic units, k=1)
+            // Coulomb potential: V = q/r (in atomic units)
             // Avoid division by zero
             if (r < 1e-10) r = 1e-10;
             
@@ -34,19 +34,25 @@ void QPSolver::build_esp_matrices(const Molecule& mol,
     // Get target ESP values
     Eigen::VectorXd V_target = grid.potentials();
     
-    // QP formulation: min 0.5 * q^T * H * q + f^T * q
-    // where the objective is: ||A*q - V_target||^2 + lambda * ||q||^2
-    //
-    // Expanding: (A*q - V)^T * (A*q - V) + lambda * q^T * q
-    //          = q^T * A^T * A * q - 2 * V^T * A * q + V^T * V + lambda * q^T * q
-    //          = q^T * (A^T * A + lambda * I) * q - 2 * V^T * A * q + const
-    //
-    // Therefore:
-    // H = 2 * (A^T * A + lambda * I)
-    // f = -2 * A^T * V_target
+    // NORMALIZE A for better conditioning
+    Eigen::VectorXd scale(n_atoms);
+    for (int j = 0; j < n_atoms; ++j) {
+        scale(j) = A.col(j).norm();
+        if (scale(j) > 1e-10) {
+            A.col(j) /= scale(j);
+        }
+    }
     
+    // QP formulation with normalized A
     H = 2.0 * (A.transpose() * A);
     f = -2.0 * A.transpose() * V_target;
+    
+    // Scale f back to account for normalization
+    for (int j = 0; j < n_atoms; ++j) {
+        if (scale(j) > 1e-10) {
+            f(j) /= scale(j);
+        }
+    }
 }
 
 QPSolution QPSolver::solve(const Eigen::MatrixXd& H,

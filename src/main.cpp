@@ -92,6 +92,9 @@ int main(int argc, char** argv) {
         std::cout << "Loading molecule from: " << xyz_file << std::endl;
         Molecule mol = XYZParser::parse(xyz_file);
         mol.set_total_charge(total_charge);
+	for (size_t i = 0; i < mol.num_atoms(); ++i) {
+		    mol.atom(i).charge *= -1.0;
+	}
         std::cout << "  Atoms: " << mol.num_atoms() << std::endl;
         std::cout << "  Total charge: " << total_charge << " e\n" << std::endl;
         

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/molecule.hpp"
+#include <iostream>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -21,7 +22,10 @@ public:
         int num_atoms = 0;
         int line_num = 0;
         
-        // Read number of atoms (first line)
+        // Conversion factor: Angstrom to Bohr
+        constexpr double angstrom_to_bohr = 1.889726125;
+        
+        // Read number of atoms
         if (std::getline(file, line)) {
             std::istringstream iss(line);
             if (!(iss >> num_atoms) || num_atoms <= 0) {
@@ -32,7 +36,7 @@ public:
             throw std::runtime_error("Empty XYZ file");
         }
         
-        // Skip comment line (second line)
+        // Skip comment line
         if (std::getline(file, line)) {
             line_num++;
         }
@@ -47,11 +51,14 @@ public:
             double x, y, z;
             
             if (iss >> element >> x >> y >> z) {
-                Eigen::Vector3d pos(x, y, z);
-                mol.add_atom(Atom(element, pos, atoms_read));
+                // CRITICAL: Convert Angstrom to Bohr for consistency
+                Eigen::Vector3d pos_angstrom(x, y, z);
+                Eigen::Vector3d pos_bohr = pos_angstrom * angstrom_to_bohr;
+                
+                mol.add_atom(Atom(element, pos_bohr, atoms_read));
                 atoms_read++;
             } else if (!line.empty()) {
-                throw std::runtime_error("Invalid atom line " + std::to_string(line_num) + " in XYZ file");
+                throw std::runtime_error("Invalid atom line " + std::to_string(line_num));
             }
         }
         
@@ -60,8 +67,9 @@ public:
                                    " atoms but read " + std::to_string(atoms_read));
         }
         
-        // Auto-detect total charge (neutral by default)
         mol.set_total_charge(0.0);
+        
+        std::cout << "  ✓ Coordinates converted: Angstrom → Bohr" << std::endl;
         
         return mol;
     }

@@ -1,0 +1,26 @@
+# Water with CORRECT experimental geometry
+
+molecule water {
+0 1
+O      0.000000    0.000000    0.117
+H      0.000000    0.757    -0.467
+H      0.000000   -0.757    -0.467
+units angstrom
+}
+
+set {
+  basis 6-31G*
+  scf_type df
+}
+
+energy, wfn = energy('B3LYP', return_wfn=True)
+
+set {
+  cubeprop_tasks ['ESP']
+  cubic_grid_spacing [0.3, 0.3, 0.3]
+  cubic_grid_overage [4.0, 4.0, 4.0]
+}
+
+cubeprop(wfn)
+
+print("\nESP.cube generated with CORRECT water geometry!")

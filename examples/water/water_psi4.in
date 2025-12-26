@@ -1,0 +1,35 @@
+# Water ESP calculation with Psi4
+
+molecule water {
+0 1
+O      0.000000    0.000000    0.118720
+H      0.000000    0.756950   -0.474880
+H      0.000000   -0.756950   -0.474880
+units angstrom
+}
+
+# Basis set and method
+set {
+  basis 6-31G*
+  scf_type df
+  reference rhf
+}
+
+# Run DFT calculation
+energy, wfn = energy('B3LYP', return_wfn=True)
+
+# Generate ESP cube file
+set {
+  cubeprop_tasks ['ESP']
+  cubic_grid_spacing [0.3, 0.3, 0.3]
+  cubic_grid_overage [4.0, 4.0, 4.0]
+}
+
+cubeprop(wfn)
+
+print("\n=== Calculation Complete ===")
+print(f"SCF Energy: {energy:.8f} Hartree")
+print(f"Dipole moment: {wfn.variable('SCF DIPOLE')}")
+print("ESP cube file generated: ESP.cube")
+print("\nTo use with charge_optimizer:")
+print("  ./charge_optimizer water.xyz ESP.cube -l 0.00001")

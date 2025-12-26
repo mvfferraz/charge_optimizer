@@ -1,0 +1,35 @@
+# Methane ESP calculation with Psi4
+
+molecule methane {
+0 1
+C      0.000000    0.000000    0.000000
+H      0.629118    0.629118    0.629118
+H     -0.629118   -0.629118    0.629118
+H     -0.629118    0.629118   -0.629118
+H      0.629118   -0.629118   -0.629118
+units angstrom
+}
+
+# Basis set and method
+set {
+  basis 6-31G*
+  scf_type df
+}
+
+# Run DFT calculation
+energy, wfn = energy('B3LYP', return_wfn=True)
+
+# Generate ESP cube file
+set {
+  cubeprop_tasks ['ESP']
+  cubic_grid_spacing [0.3, 0.3, 0.3]
+  cubic_grid_overage [4.0, 4.0, 4.0]
+}
+
+cubeprop(wfn)
+
+print("\n=== Calculation Complete ===")
+print(f"SCF Energy: {energy:.8f} Hartree")
+print("ESP cube file generated: ESP.cube")
+print("\nTo use with charge_optimizer:")
+print("  ./charge_optimizer methane.xyz ESP.cube")
